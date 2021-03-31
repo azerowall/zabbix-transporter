@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2021-03-31T06:31:28Z</date>
+    <groups>
+        <group>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template Transporter</template>
+            <name>Template Transporter</name>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>Transporter bitrate</name>
+                    <type>DEPENDENT</type>
+                    <key>porter.stat.bitrate[{$PORTER.PORT}]</key>
+                    <delay>0</delay>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.bitrate</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>porter.stat[{$PORTER.PORT}]</key>
+                    </master_item>
+                </item>
+                <item>
+                    <name>Transporter uptime</name>
+                    <type>DEPENDENT</type>
+                    <key>porter.stat.uptime[{$PORTER.PORT}]</key>
+                    <delay>0</delay>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.uptime</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>porter.stat[{$PORTER.PORT}]</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{change()}&lt;0</expression>
+                            <name>Transporter: Service restarted</name>
+                            <priority>INFO</priority>
+                            <description>Transporter restart - uptime has been reset</description>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Transporter stat</name>
+                    <key>porter.stat[{$PORTER.PORT}]</key>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata(5m)}=1</expression>
+                            <name>Transporter: Service is down</name>
+                            <priority>WARNING</priority>
+                            <manual_close>YES</manual_close>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Transporter streams list</name>
+                    <key>porter.streams[{$PORTER.PORT}]</key>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Transporter streams discovery</name>
+                    <key>porter.streams.discovery[{$PORTER.PORT}]</key>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Transporter stream &quot;{#NAME}&quot; bitrate</name>
+                            <type>DEPENDENT</type>
+                            <key>porter.streams.bitrate[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            <delay>0</delay>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.bitrate</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>porter.streams.stat[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Transporter stream &quot;{#NAME}&quot; enabled</name>
+                            <type>DEPENDENT</type>
+                            <key>porter.streams.enabled[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            <delay>0</delay>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.enabled</params>
+                                </step>
+                                <step>
+                                    <type>BOOL_TO_DECIMAL</type>
+                                    <params/>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>porter.streams.stat[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Transporter stream &quot;{#NAME}&quot; state</name>
+                            <type>DEPENDENT</type>
+                            <key>porter.streams.state[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            <delay>0</delay>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.state</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>porter.streams.stat[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{diff()}=1&#13;
+and&#13;
+({str(&quot;SEND_ERROR&quot;,#1)}=1&#13;
+or&#13;
+{str(&quot;NO_INPUT&quot;,#1)}=1)</expression>
+                                    <name>Transporter stream &quot;{#NAME}&quot; problem state</name>
+                                    <priority>WARNING</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Transporter stream &quot;{#NAME}&quot; stat</name>
+                            <type>DEPENDENT</type>
+                            <key>porter.streams.stat[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            <delay>0</delay>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.[?(@.name==&quot;{#NAME}&quot;)].first()</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>porter.streams[{$PORTER.PORT}]</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Transporter stream &quot;{#NAME}&quot; uptime</name>
+                            <type>DEPENDENT</type>
+                            <key>porter.streams.uptime[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            <delay>0</delay>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.uptime</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>porter.streams.stat[{$PORTER.PORT},&quot;{#NAME}&quot;]</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$PORTER.PORT}</macro>
+                    <value>8066</value>
+                    <description>Transporter port (default 8066)</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
