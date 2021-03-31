@@ -2,7 +2,6 @@ package microporter
 
 import (
 	"strconv"
-	"errors"
 
 	"encoding/json"
 
@@ -17,15 +16,15 @@ type Plugin struct {
 var impl Plugin
 
 const (
-	keyStreamDiscovery = "porter.stream.discovery"
-	keyStreamInfo = "porter.stream"
+	keyStreamsDiscovery = "porter.streams.discovery"
+	keyStreams = "porter.streams"
 	keyStat = "porter.stat"
 )
 
 func init() {
     plugin.RegisterMetrics(&impl, "Transporter", keyStat, "Transporter statistics.")
-    plugin.RegisterMetrics(&impl, "Transporter", keyStreamDiscovery, "Transporter stream discovery.")
-    plugin.RegisterMetrics(&impl, "Transporter", keyStreamInfo, "Transporter stream info.")
+    plugin.RegisterMetrics(&impl, "Transporter", keyStreamsDiscovery, "Transporter streams discovery.")
+    plugin.RegisterMetrics(&impl, "Transporter", keyStreams, "Transporter streams list.")
 }
 
 
@@ -52,7 +51,7 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 
 		return string(result), nil
 
-	case keyStreamDiscovery:
+	case keyStreamsDiscovery:
 		client := NewApiClient(port)
 
 		var streams []StreamInfo
@@ -66,9 +65,7 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 		}
 		return string(discovery), nil
 	
-	case keyStreamInfo:
-		name := params[1]
-
+	case keyStreams:
 		client := NewApiClient(port)
 
 		var streams []StreamInfo
@@ -76,17 +73,11 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 			return nil, err
 		}
 
-		for _, stream := range(streams) {
-			if stream.Name == name {
-				result, err := json.Marshal(&stream)
-				if err != nil {
-					return nil, err
-				}
-				return string(result), nil
-			}
+		result, err := json.Marshal(&streams)
+		if err != nil {
+			return nil, err
 		}
-
-		return nil, errors.New("Stream not found")
+		return string(result), nil
 	}
 
 	return nil, nil
@@ -98,6 +89,7 @@ func (p *Plugin) Export(key string, params []string, ctx plugin.ContextProvider)
 
 
 type streamDicovery struct {
+	Id		uint	`json:"{#ID}"`
 	Name	string	`json:"{#NAME}"`
 }
 
@@ -105,7 +97,7 @@ func getStreamDiscovery(streams []StreamInfo) (res []byte, err error) {
 	streamsDisc := make([]streamDicovery, 0)
 
 	for _, stream := range(streams) {
-		streamsDisc = append(streamsDisc, streamDicovery{stream.Name})
+		streamsDisc = append(streamsDisc, streamDicovery{stream.Id, stream.Name})
 	}
 	
 	if res, err = json.Marshal(&streamsDisc); err != nil {

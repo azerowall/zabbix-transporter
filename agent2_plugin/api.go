@@ -16,7 +16,7 @@ func NewApiClient(port uint16) ApiClient {
 }
 
 func (c *ApiClient) call(method string, args interface{}, reply interface{}) error {
-	client, err := jsonrpc2.Dial("tcp", "localhost:" + strconv.FormatUint(uint64(c.port), 10))
+	client, err := jsonrpc2.Dial("tcp", "127.0.0.1:" + strconv.FormatUint(uint64(c.port), 10))
 	if err != nil {
 		return err
 	}
